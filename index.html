@@ -625,7 +625,7 @@ async function loadAndRenderCards() {
       ? '*, categories(label)'
       : 'id, title, description, category_id, image_url, badge, member_only, sort_order, created_at, categories(label)';
     const result = await Promise.race([
-      sb.from('prompts').select(cols),
+      sb.from('prompts').select(cols).order('updated_at', { ascending: false }),
       new Promise((_,r) => setTimeout(()=>r(new Error('timeout')), 8000))
     ]);
     data = result.data;
