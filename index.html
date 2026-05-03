@@ -496,9 +496,12 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════
 
 // Handle auth state changes
+let authInitialized = false;
 sb.auth.onAuthStateChange(async (event, session) => {
+  // Skip event pertama saat halaman load — sudah ditangani init()
+  if (!authInitialized) { authInitialized = true; return; }
+
   if (event === 'SIGNED_IN' && session?.user) {
-    // Handle Google OAuth redirect
     currentUser = session.user;
     await loadProfile();
     updateNav();
@@ -508,7 +511,6 @@ sb.auth.onAuthStateChange(async (event, session) => {
     } else {
       await loadAndRenderCards();
     }
-    // Handle pending Google register code
     const pendingCode = localStorage.getItem('pending_code');
     if (pendingCode) {
       localStorage.removeItem('pending_code');
