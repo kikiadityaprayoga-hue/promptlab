@@ -177,7 +177,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .toast.error{border-color:rgba(248,113,113,.3);color:var(--red);}
 
 /* LOADING OVERLAY */
-/* loader dihapus */
+/* PIP before image */
+.pip-before {
+  position: absolute; bottom: 8px; left: 8px;
+  width: 30%; aspect-ratio: 1/1;
+  border-radius: 8px; overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  z-index: 2;
+}
+.pip-before img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pip-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.65); color: #fff;
+  font-size: 8px; font-family: var(--mono);
+  text-align: center; padding: 2px 0;
+}
 
 @media(max-width:600px){
   .hero h1{font-size:26px;}
@@ -260,7 +275,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <div class="form-group"><label>DESKRIPSI SINGKAT</label><input type="text" id="aDesc" placeholder="Deskripsi singkat..."/></div>
         <div class="form-group"><label>PROMPT LENGKAP (khusus member)</label><textarea id="aPrompt" placeholder="Tulis prompt lengkap di sini..."></textarea></div>
         <div class="form-row">
-          <div class="form-group"><label>URL THUMBNAIL</label><input type="text" id="aImg" placeholder="https://images.unsplash.com/..."/></div>
+          <div class="form-group"><label>URL THUMBNAIL (AFTER)</label><input type="text" id="aImg" placeholder="https://images.unsplash.com/..."/></div>
+          <div class="form-group"><label>URL FOTO BEFORE (opsional)</label><input type="text" id="aImgBefore" placeholder="URL foto asli sebelum di-AI..."/></div>
+        </div>
           <div class="form-group"><label>BADGE</label>
             <select id="aBadge"><option value="">— Tidak ada —</option><option value="viral">VIRAL</option><option value="new">NEW</option></select>
           </div>
@@ -422,6 +439,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         <select id="editBadge"><option value="">— Tidak ada —</option><option value="viral">VIRAL</option><option value="new">NEW</option></select>
       </div>
     </div>
+    <div class="form-group"><label>URL FOTO BEFORE (opsional)</label><input type="text" id="editImgBefore" placeholder="URL foto asli sebelum di-AI..."/></div>
     <div class="form-group"><label>MEMBER ONLY?</label>
       <select id="editMember"><option value="true">Ya</option><option value="false">Tidak</option></select>
     </div>
@@ -683,11 +701,17 @@ function renderCards() {
   grid.innerHTML = filtered.map(p=>{
     const locked = p.member_only && !isMember;
     const catLabel = p.categories?.label || p.category_id || '';
+    const pipHtml = p.image_before_url ? `
+      <div class="pip-before">
+        <img src="${p.image_before_url}" alt="before" loading="lazy" onerror="this.parentElement.style.display='none'"/>
+        <div class="pip-label">Before</div>
+      </div>` : '';
     return `<div class="card" onclick="openDetail(${p.id})">
       <div class="card-thumb">
         <img src="${p.image_url||''}" alt="${p.title}" loading="lazy" onerror="this.style.opacity=0"/>
         <div class="card-thumb-overlay"></div>
         ${p.badge==='viral'?'<div class="badge viral">VIRAL</div>':p.badge==='new'?'<div class="badge new">NEW</div>':''}
+        ${pipHtml}
       </div>
       <div class="card-body">
         <div class="card-title">${p.title}</div>
@@ -767,14 +791,16 @@ async function addPrompt() {
   const cat        = document.getElementById('aCat').value;
   const desc       = document.getElementById('aDesc').value.trim();
   const prompt_text= document.getElementById('aPrompt').value.trim();
-  const image_url  = document.getElementById('aImg').value.trim();
+  const image_url       = document.getElementById('aImg').value.trim();
+  const image_before_url= document.getElementById('aImgBefore').value.trim();
   const badge      = document.getElementById('aBadge').value;
   const member_only= document.getElementById('aMember').value==='1';
   if (!title||!desc||!prompt_text) { showToast('Isi field yang wajib!','error'); return; }
   setLoading('aSaveBtn',true,'Simpan Prompt');
   const { error } = await sb.from('prompts').insert({
     title, description:desc, prompt_text, category_id:cat,
-    image_url:image_url||null, badge:badge||'', member_only
+    image_url:image_url||null, image_before_url:image_before_url||null,
+    badge:badge||'', member_only
   });
   setLoading('aSaveBtn',false,'Simpan Prompt');
   if (error) { showToast('Gagal: '+error.message,'error'); return; }
@@ -818,6 +844,7 @@ async function openEdit(id) {
   document.getElementById('editCat').value    = p.category_id;
   document.getElementById('editBadge').value  = p.badge||'';
   document.getElementById('editMember').value = p.member_only?'true':'false';
+  document.getElementById('editImgBefore').value = p.image_before_url||'';
   showModal('editModal');
 }
 
@@ -831,6 +858,7 @@ async function saveEdit() {
     category_id: document.getElementById('editCat').value,
     badge:       document.getElementById('editBadge').value,
     member_only: document.getElementById('editMember').value==='true',
+    image_before_url: document.getElementById('editImgBefore').value.trim()||null,
     updated_at:  new Date().toISOString()
   }).eq('id',id);
   setLoading('editSaveBtn',false,'Simpan Perubahan');
