@@ -641,7 +641,7 @@ async function loadAndRenderCards() {
     const isMember = currentUser && currentProfile;
     const cols = isMember
       ? '*, categories(label)'
-      : 'id, title, description, category_id, image_url, badge, member_only, sort_order, created_at, categories(label)';
+      : 'id, title, description, category_id, image_url, image_before_url, badge, member_only, sort_order, created_at, categories(label)';
     const result = await Promise.race([
       sb.from('prompts').select(cols).order('updated_at', { ascending: false }),
       new Promise((_,r) => setTimeout(()=>r(new Error('timeout')), 8000))
