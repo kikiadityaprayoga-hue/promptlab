@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PromptLab — AI Prompt Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- ⚠️  GANTI DENGAN CREDENTIALS SUPABASE KAMU -->
+<script>
+  const SUPABASE_URL = 'https://mgwtzrephaxswdzmgcli.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nd3R6cmVwaGF4c3dkem1nY2xpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MzkxNzYsImV4cCI6MjA5MzMxNTE3Nn0.EuNZ2WIbF6K-Muw_xBuCzlzIX0-qAD6YhGNQqu4MKPM';
+  const ADMIN_EMAIL  = 'admin@promptlab.id'; // email admin kamu
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#17171f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#a78bfa;--accent2:#7c3aed;--accent-dim:rgba(167,139,250,0.12);
+  --text:#e8e8f4;--text2:rgba(232,232,244,0.55);--text3:rgba(232,232,244,0.28);
+  --red:#f87171;--green:#4ade80;--yellow:#fbbf24;
+  --mono:'DM Mono',monospace;--sans:'Sora',sans-serif;
+  --radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+.hidden{display:none!important;}
+
+/* NAVBAR */
+.navbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;background:rgba(10,10,15,0.93);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border);}
+.logo{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.logo-pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-pill{font-size:11px;font-family:var(--mono);padding:5px 12px;border-radius:20px;border:0.5px solid var(--border2);color:var(--text2);cursor:pointer;background:transparent;transition:all .15s;}
+.nav-pill:hover{color:var(--text);border-color:var(--accent);}
+.nav-pill.primary{background:var(--accent-dim);color:var(--accent);border-color:rgba(167,139,250,.3);}
+
+/* HERO */
+.hero{position:relative;text-align:center;padding:72px 24px 48px;overflow:hidden;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(124,58,237,.15) 0%,transparent 70%);}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.55;}
+.hero-inner{position:relative;z-index:1;}
+.hero-chips{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.chip{position:absolute;font-family:var(--mono);font-size:9px;color:rgba(167,139,250,.4);border:0.5px solid rgba(167,139,250,.15);background:rgba(167,139,250,.04);border-radius:6px;padding:4px 8px;white-space:nowrap;animation:chipFloat linear infinite;}
+@keyframes chipFloat{0%{transform:translateY(0) translateX(0);opacity:0;}10%{opacity:1;}90%{opacity:.6;}100%{transform:translateY(-28px) translateX(6px);opacity:0;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.hero::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(to bottom,transparent 40%,rgba(124,58,237,.03) 50%,transparent 60%);animation:scanline 4s linear infinite;}
+@keyframes scanline{0%{transform:translateY(-100%);}100%{transform:translateY(100%);}}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--accent);border:0.5px solid rgba(167,139,250,.3);border-radius:20px;padding:4px 12px;margin-bottom:20px;background:var(--accent-dim);animation:fadeUp .6s ease both;}
+.hero h1{font-size:38px;font-weight:600;line-height:1.15;letter-spacing:-1px;margin-bottom:12px;background:linear-gradient(135deg,#f0eeff 30%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeUp .6s .1s ease both;}
+.hero p{font-size:14px;color:var(--text2);max-width:420px;margin:0 auto 28px;line-height:1.7;animation:fadeUp .6s .2s ease both;}
+.search-wrap{position:relative;max-width:460px;margin:0 auto;animation:fadeUp .6s .3s ease both;}
+.search-wrap input{width:100%;padding:12px 44px 12px 16px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-wrap input::placeholder{color:var(--text3);}
+.search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+
+/* STATS */
+.stats{display:flex;justify-content:center;gap:40px;padding:20px 24px;border-bottom:0.5px solid var(--border);}
+.stat{text-align:center;}
+.stat-n{font-family:var(--mono);font-size:22px;color:var(--accent);}
+.stat-l{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+
+/* CAT BAR */
+.cat-bar{display:flex;gap:6px;padding:20px 28px 0;overflow-x:auto;scrollbar-width:none;}
+.cat-bar::-webkit-scrollbar{display:none;}
+.cat-btn{flex-shrink:0;font-family:var(--mono);font-size:11px;padding:5px 14px;border-radius:20px;cursor:pointer;border:0.5px solid var(--border);background:transparent;color:var(--text2);transition:all .15s;}
+.cat-btn.active{background:var(--accent-dim);border-color:rgba(167,139,250,.35);color:var(--accent);}
+.cat-btn:hover:not(.active){border-color:var(--border2);color:var(--text);}
+
+/* SECTION */
+.section-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 28px 14px;}
+.section-hd span{font-family:var(--mono);font-size:11px;color:var(--text2);}
+
+/* GRID & CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:0 28px 40px;}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;}
+.card:hover{border-color:rgba(167,139,250,.25);transform:translateY(-2px);}
+.card-thumb{width:100%;aspect-ratio:1/1;position:relative;overflow:hidden;background:var(--bg3);}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%);}
+.badge{position:absolute;top:8px;left:8px;font-family:var(--mono);font-size:9px;font-weight:500;padding:3px 8px;border-radius:20px;}
+.badge.viral{background:rgba(239,68,68,.9);color:#fff;}
+.badge.new{background:rgba(74,222,128,.9);color:#052e16;}
+.lock-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:20px;background:rgba(251,191,36,.1);border:0.5px solid rgba(251,191,36,.25);color:var(--yellow);}
+.card-body{padding:10px 12px 12px;}
+.card-title{font-size:13px;font-weight:500;margin-bottom:3px;}
+.card-desc{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:10px;}
+.card-foot{display:flex;align-items:center;justify-content:space-between;}
+.cat-tag{font-family:var(--mono);font-size:9px;padding:2px 8px;border:0.5px solid rgba(167,139,250,.2);border-radius:20px;color:rgba(167,139,250,.6);}
+.copy-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--accent-dim);border:0.5px solid rgba(167,139,250,.25);border-radius:6px;color:var(--accent);cursor:pointer;transition:background .15s;}
+.copy-btn:hover{background:rgba(167,139,250,.2);}
+.member-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;background:rgba(251,191,36,.1);border:0.5px solid rgba(251,191,36,.25);border-radius:6px;color:var(--yellow);cursor:pointer;}
+
+/* SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.skel-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.skel-thumb{width:100%;aspect-ratio:1/1;}
+.skel-body{padding:10px 12px 12px;}
+.skel-line{height:12px;border-radius:4px;margin-bottom:8px;}
+.skel-line.short{width:60%;}
+.skel-line.xs{width:40%;height:10px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:32px;position:relative;animation:modalIn .2s ease;max-height:90vh;overflow-y:auto;}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:0.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.modal-close:hover{background:var(--bg3);}
+.modal h2{font-size:20px;font-weight:600;margin-bottom:4px;}
+.modal p.sub{font-size:12px;color:var(--text2);margin-bottom:24px;line-height:1.6;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:6px;letter-spacing:.03em;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);}
+.form-group textarea{resize:vertical;min-height:80px;}
+.form-group select option{background:var(--bg3);}
+.form-group.code-field input{font-family:var(--mono);letter-spacing:.1em;font-size:15px;text-transform:uppercase;border-color:rgba(251,191,36,.3);}
+.form-group.code-field input:focus{border-color:var(--yellow);}
+.code-hint{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;}
+.btn-full{width:100%;padding:11px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;}
+.btn-accent{background:var(--accent2);color:#fff;}
+.btn-accent:hover{background:#6d28d9;}
+.btn-accent:disabled{opacity:.5;cursor:not-allowed;}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
+.divider::before,.divider::after{content:"";flex:1;height:.5px;background:var(--border2);}
+.divider span{font-family:var(--mono);font-size:10px;color:var(--text3);}
+.google-btn{width:100%;padding:11px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:transparent;color:var(--text);font-family:var(--mono);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;}
+.google-btn:hover{background:var(--bg3);}
+.modal-switch{text-align:center;margin-top:16px;font-size:11px;color:var(--text2);}
+.modal-switch a{color:var(--accent);cursor:pointer;}
+.form-error{font-family:var(--mono);font-size:10px;color:var(--red);margin-top:8px;padding:8px 10px;background:rgba(248,113,113,.08);border-radius:6px;border:0.5px solid rgba(248,113,113,.2);}
+.form-success{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:8px;padding:8px 10px;background:rgba(74,222,128,.08);border-radius:6px;border:0.5px solid rgba(74,222,128,.2);}
+.member-indicator{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:20px;border:0.5px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:var(--yellow);}
+
+/* DETAIL MODAL */
+.prompt-modal{max-width:520px;}
+.big-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:16px;background:var(--bg3);}
+.prompt-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);margin:12px 0;position:relative;min-height:80px;}
+.blur-overlay{position:absolute;inset:0;border-radius:var(--radius-sm);backdrop-filter:blur(5px);background:rgba(10,10,15,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.blur-overlay span{font-family:var(--mono);font-size:11px;color:var(--text2);}
+
+/* ADMIN */
+.admin-wrap{min-height:calc(100vh - 56px);padding:32px 28px;}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.admin-header h2{font-size:20px;font-weight:600;}
+.admin-tabs{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+.tab-btn{font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.tab-btn.active{background:var(--accent-dim);border-color:rgba(167,139,250,.35);color:var(--accent);}
+.admin-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+.admin-box h3{font-size:13px;font-weight:500;margin-bottom:20px;font-family:var(--mono);color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-family:var(--mono);font-size:10px;color:var(--text3);padding:8px 12px;text-align:left;border-bottom:0.5px solid var(--border);}
+.tbl td{padding:11px 12px;border-bottom:0.5px solid var(--border);font-size:12px;vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+.thumb-mini{width:38px;height:38px;border-radius:6px;object-fit:cover;}
+.act-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer;border:0.5px solid;transition:opacity .15s;margin-left:4px;}
+.act-btn.edit{border-color:rgba(167,139,250,.3);color:var(--accent);background:var(--accent-dim);}
+.act-btn.del{border-color:rgba(248,113,113,.3);color:var(--red);background:rgba(248,113,113,.08);}
+.act-btn:hover{opacity:.75;}
+.code-badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:20px;}
+.code-badge.active{background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.25);color:var(--green);}
+.code-badge.used{background:rgba(248,113,113,.08);border:0.5px solid rgba(248,113,113,.2);color:var(--red);}
+.code-badge.expired{background:rgba(255,255,255,.05);border:0.5px solid var(--border);color:var(--text3);}
+.code-val{font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:var(--text);font-weight:500;}
+.gen-strip{display:flex;align-items:center;gap:10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;}
+.gen-strip input{flex:1;background:transparent;border:none;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;}
+.gen-strip select{background:transparent;border:none;font-family:var(--mono);font-size:12px;color:var(--text2);outline:none;cursor:pointer;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:0.5px solid rgba(167,139,250,.3);color:var(--accent);font-family:var(--mono);font-size:11px;padding:10px 20px;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.success{border-color:rgba(74,222,128,.3);color:var(--green);}
+.toast.error{border-color:rgba(248,113,113,.3);color:var(--red);}
+
+/* LOADING OVERLAY */
+/* loader dihapus */
+
+@media(max-width:600px){
+  .hero h1{font-size:26px;}
+  .stats{gap:20px;}
+  .grid{grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 32px;}
+  .form-row{grid-template-columns:1fr;}
+  .admin-wrap{padding:20px 16px;}
+  .navbar{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo" onclick="goHome()"><div class="logo-pulse"></div>PromptLab</div>
+  <div class="nav-right" id="navRight">
+    <button class="nav-pill" onclick="showModal('loginModal')">Login</button>
+    <button class="nav-pill primary" onclick="showModal('registerModal')">Daftar</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="mainContent">
+  <div class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-chips" id="heroChips"></div>
+    <div class="hero-inner">
+      <div class="hero-tag"><span>&#9679;</span> Updated weekly</div>
+      <h1>Transform Your Photos<br/>with AI Prompts</h1>
+      <p>Kumpulan prompt viral untuk mengubah foto biasa jadi karya AI yang memukau. Works on Midjourney, ChatGPT, Gemini & all AI tools.</p>
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Cari prompt... / Search prompts..." oninput="renderCards()"/>
+        <span class="search-icon">&#9906;</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="statTotal">—</div><div class="stat-l">Total Prompts</div></div>
+    <div class="stat"><div class="stat-n" id="statCatCount">—</div><div class="stat-l">Kategori</div></div>
+    <div class="stat"><div class="stat-n">Weekly</div><div class="stat-l">Update</div></div>
+  </div>
+
+  <div class="cat-bar" id="catBar"></div>
+
+  <div class="section-hd">
+    <span id="sectionTitle">All Prompts</span>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="countLabel"></span>
+  </div>
+  <div class="grid" id="cardGrid"></div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="hidden" id="adminPanel">
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h2>Admin Panel</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="member-indicator">&#9670; Admin</div>
+        <button class="nav-pill" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('tabAdd',this)">+ Tambah Prompt</button>
+      <button class="tab-btn" onclick="switchTab('tabList',this)">Kelola Prompt</button>
+      <button class="tab-btn" onclick="switchTab('tabCodes',this)">&#128273; Kode Akses</button>
+      <button class="tab-btn" onclick="switchTab('tabCats',this)">&#127991; Kategori</button>
+      <button class="tab-btn" onclick="switchTab('tabMembers',this)">Members</button>
+    </div>
+
+    <!-- TAB: TAMBAH PROMPT -->
+    <div id="tabAdd">
+      <div class="admin-box">
+        <h3>// Tambah Prompt Baru</h3>
+        <div class="form-row">
+          <div class="form-group"><label>JUDUL PROMPT</label><input type="text" id="aTitle" placeholder="cth: Enchanted Forest Queen"/></div>
+          <div class="form-group"><label>KATEGORI</label><select id="aCat"></select></div>
+        </div>
+        <div class="form-group"><label>DESKRIPSI SINGKAT</label><input type="text" id="aDesc" placeholder="Deskripsi singkat..."/></div>
+        <div class="form-group"><label>PROMPT LENGKAP (khusus member)</label><textarea id="aPrompt" placeholder="Tulis prompt lengkap di sini..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>URL THUMBNAIL</label><input type="text" id="aImg" placeholder="https://images.unsplash.com/..."/></div>
+          <div class="form-group"><label>BADGE</label>
+            <select id="aBadge"><option value="">— Tidak ada —</option><option value="viral">VIRAL</option><option value="new">NEW</option></select>
+          </div>
+        </div>
+        <div class="form-group"><label>MEMBER ONLY?</label>
+          <select id="aMember"><option value="1">Ya — hanya untuk member</option><option value="0">Tidak — gratis untuk semua</option></select>
+        </div>
+        <button class="btn-full btn-accent" id="aSaveBtn" onclick="addPrompt()" style="margin-top:8px">Simpan Prompt</button>
+      </div>
+    </div>
+
+    <!-- TAB: KELOLA PROMPT -->
+    <div id="tabList" class="hidden">
+      <div class="admin-box" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>IMG</th><th>JUDUL</th><th>KATEGORI</th><th>BADGE</th><th>MEMBER</th><th>AKSI</th></tr></thead>
+          <tbody id="adminTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: KODE AKSES -->
+    <div id="tabCodes" class="hidden">
+      <div class="admin-box">
+        <h3>// Generate Kode Akses</h3>
+        <div class="gen-strip">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">Expired:</span>
+          <select id="expireDays">
+            <option value="30">30 hari</option><option value="60">60 hari</option>
+            <option value="90">90 hari</option><option value="365">1 tahun</option>
+            <option value="0">Selamanya</option>
+          </select>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">Jumlah:</span>
+          <input id="genQty" type="number" min="1" max="50" value="1" style="width:52px;background:transparent;border:none;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;"/>
+          <button class="nav-pill primary" onclick="generateCodes()" style="flex-shrink:0">Generate &#9881;</button>
+        </div>
+        <div id="genPreview" class="hidden" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Kode baru:</span>
+            <button class="act-btn edit" onclick="copyAllCodes()">Copy semua</button>
+          </div>
+          <div id="genPreviewList" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>KODE</th><th>STATUS</th><th>DIPAKAI OLEH</th><th>EXPIRED</th><th>AKSI</th></tr></thead>
+          <tbody id="codesTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: KATEGORI -->
+    <div id="tabCats" class="hidden">
+      <div class="admin-box">
+        <h3>// Kelola Kategori</h3>
+        <div style="display:flex;gap:10px;margin-bottom:20px;align-items:flex-end">
+          <div class="form-group" style="flex:1;margin-bottom:0"><label>NAMA KATEGORI BARU</label><input type="text" id="newCatName" placeholder="cth: horror, sci-fi..."/></div>
+          <button class="nav-pill primary" onclick="addCategory()" style="height:40px;padding:0 18px;flex-shrink:0">+ Tambah</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>NAMA</th><th>SLUG</th><th>JUMLAH PROMPT</th><th>AKSI</th></tr></thead>
+          <tbody id="catsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: MEMBERS -->
+    <div id="tabMembers" class="hidden">
+      <div class="admin-box" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>NAMA</th><th>EMAIL</th><th>KODE DIPAKAI</th><th>BERGABUNG</th></tr></thead>
+          <tbody id="memberTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">&#215;</button>
+    <h2>Masuk</h2>
+    <p class="sub">Login untuk akses prompt lengkap</p>
+    <div class="form-group"><label>EMAIL</label><input type="email" id="loginEmail" placeholder="kamu@email.com"/></div>
+    <div class="form-group"><label>PASSWORD</label><input type="password" id="loginPass" placeholder="••••••••"/></div>
+    <div id="loginErr" class="form-error hidden"></div>
+    <button class="btn-full btn-accent" id="loginBtn" onclick="doLogin()" style="margin-top:4px">Masuk</button>
+    <div class="divider"><span>atau</span></div>
+    <button class="google-btn" onclick="googleLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Lanjut dengan Google
+    </button>
+    <div class="modal-switch">Belum punya akun? <a onclick="switchModal('loginModal','registerModal')">Daftar dengan kode akses</a></div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal-bg hidden" id="registerModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('registerModal')">&#215;</button>
+    <h2>Daftar Member</h2>
+    <p class="sub">Butuh kode akses. Dapatkan di <span style="color:var(--accent)">lynk.id/promptlab</span></p>
+    <div class="form-group code-field">
+      <label>&#128273; KODE AKSES</label>
+      <input type="text" id="regCode" placeholder="PLAB-XXXX" maxlength="9" oninput="this.value=this.value.toUpperCase()"/>
+      <div class="code-hint">Kode didapat setelah pembelian di lynk.id</div>
+    </div>
+    <div class="form-group"><label>NAMA LENGKAP</label><input type="text" id="regName" placeholder="Nama kamu"/></div>
+    <div class="form-group"><label>EMAIL</label><input type="email" id="regEmail" placeholder="kamu@email.com"/></div>
+    <div class="form-group"><label>PASSWORD</label><input type="password" id="regPass" placeholder="Min. 6 karakter"/></div>
+    <div id="regErr" class="form-error hidden"></div>
+    <div id="regOk" class="form-success hidden"></div>
+    <button class="btn-full btn-accent" id="regBtn" onclick="doRegister()" style="margin-top:4px">Buat Akun</button>
+    <div class="divider"><span>atau masuk dengan Google (perlu kode juga)</span></div>
+    <button class="google-btn" onclick="googleRegister()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Lanjut dengan Google
+    </button>
+    <div class="modal-switch">Sudah punya akun? <a onclick="switchModal('registerModal','loginModal')">Masuk</a></div>
+  </div>
+</div>
+
+<!-- DETAIL PROMPT MODAL -->
+<div class="modal-bg hidden" id="detailModal">
+  <div class="modal prompt-modal">
+    <button class="modal-close" onclick="closeModal('detailModal')">&#215;</button>
+    <img id="detailImg" class="big-thumb" src="" alt=""/>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="cat-tag" id="detailCat"></span>
+      <span id="detailBadgeEl"></span>
+    </div>
+    <h2 style="font-size:17px;margin-bottom:4px" id="detailTitle"></h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:4px" id="detailDesc"></p>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:8px">Gunakan di Midjourney, ChatGPT, Gemini, Stable Diffusion, dll.</p>
+    <div class="prompt-box">
+      <span id="detailPromptText"></span>
+      <div class="blur-overlay hidden" id="blurOverlay">
+        <span>&#128274; Prompt lengkap khusus member</span>
+        <button class="member-btn" style="margin-top:4px" onclick="closeModal('detailModal');showModal('registerModal')">Beli Akses di lynk.id &#8599;</button>
+      </div>
+    </div>
+    <button class="btn-full btn-accent hidden" id="detailCopyBtn" onclick="copyDetail()">Copy Prompt</button>
+  </div>
+</div>
+
+<!-- EDIT PROMPT MODAL -->
+<div class="modal-bg hidden" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editModal')">&#215;</button>
+    <h2>Edit Prompt</h2>
+    <p class="sub">Perbarui data prompt</p>
+    <input type="hidden" id="editId"/>
+    <div class="form-group"><label>JUDUL</label><input type="text" id="editTitle"/></div>
+    <div class="form-group"><label>DESKRIPSI</label><input type="text" id="editDesc2"/></div>
+    <div class="form-group"><label>PROMPT LENGKAP</label><textarea id="editPrompt"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>KATEGORI</label><select id="editCat"></select></div>
+      <div class="form-group"><label>BADGE</label>
+        <select id="editBadge"><option value="">— Tidak ada —</option><option value="viral">VIRAL</option><option value="new">NEW</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>MEMBER ONLY?</label>
+      <select id="editMember"><option value="true">Ya</option><option value="false">Tidak</option></select>
+    </div>
+    <button class="btn-full btn-accent" id="editSaveBtn" onclick="saveEdit()">Simpan Perubahan</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// INIT SUPABASE
+// ══════════════════════════════════════════
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════ STATE ══════
+let currentUser    = null;
+let currentProfile = null;
+let activeCat      = 'all';
+let detailPromptData = '';
+let allPrompts     = [];
+let allCategories  = [];
+let lastGenCodes   = [];
+
+// ══════ HELPERS ══════
+function fmtDate(d) {
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const dt = new Date(d);
+  return dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+}
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast', 2800);
+}
+function showErr(el, msg) { el.textContent=msg; el.classList.remove('hidden'); }
+function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function switchModal(a,b) { closeModal(a); showModal(b); }
+function setLoading(btnId, loading, text='Simpan') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Memproses...' : text;
+}
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') document.querySelectorAll('.modal-bg').forEach(m=>m.classList.add('hidden'));
+});
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+
+// Handle token refresh & sign out saja
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_OUT') {
+    currentUser = null; currentProfile = null;
+    updateNav(); goHome(); await loadAndRenderCards();
+  }
+  if (event === 'TOKEN_REFRESHED' && session?.user) {
+    currentUser = session.user;
+  }
+});
+
+async function loadProfile() {
+  const { data } = await sb
+    .from('profiles')
+    .select('*')
+    .eq('id', currentUser.id)
+    .single();
+  currentProfile = data;
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+  err.classList.add('hidden');
+  if (!email || !pass) { showErr(err,'Isi semua field'); return; }
+  setLoading('loginBtn', true, 'Masuk');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  setLoading('loginBtn', false, 'Masuk');
+  if (error) { showErr(err, error.message === 'Invalid login credentials' ? 'Email atau password salah' : error.message); return; }
+  closeModal('loginModal');
+  showToast('Selamat datang kembali!', 'success');
+}
+
+async function doRegister() {
+  const code  = document.getElementById('regCode').value.trim().toUpperCase();
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  const err   = document.getElementById('regErr');
+  const ok    = document.getElementById('regOk');
+  err.classList.add('hidden'); ok.classList.add('hidden');
+  if (!code||!name||!email||!pass) { showErr(err,'Isi semua field termasuk kode akses'); return; }
+  if (pass.length < 6) { showErr(err,'Password minimal 6 karakter'); return; }
+
+  setLoading('regBtn', true, 'Buat Akun');
+
+  // 1. Daftar ke Supabase Auth
+  const { data: authData, error: authErr } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { full_name: name } }
+  });
+  if (authErr) { setLoading('regBtn',false,'Buat Akun'); showErr(err, authErr.message); return; }
+
+  // 2. Validasi & gunakan kode via RPC function
+  const { data: codeResult, error: codeErr } = await sb.rpc('use_access_code', {
+    p_code:    code,
+    p_user_id: authData.user.id,
+    p_name:    name,
+    p_email:   email
+  });
+  if (codeErr || !codeResult?.ok) {
+    // Rollback: hapus user yang baru dibuat
+    await sb.auth.admin?.deleteUser(authData.user.id);
+    setLoading('regBtn',false,'Buat Akun');
+    showErr(err, codeResult?.error || 'Kode akses tidak valid');
+    return;
+  }
+
+  setLoading('regBtn',false,'Buat Akun');
+  ok.textContent = 'Akun berhasil dibuat! Silakan login.';
+  ok.classList.remove('hidden');
+  setTimeout(()=>{ closeModal('registerModal'); showModal('loginModal'); document.getElementById('loginEmail').value=email; }, 1800);
+}
+
+async function googleLogin() {
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function googleRegister() {
+  const code = document.getElementById('regCode').value.trim().toUpperCase();
+  const err  = document.getElementById('regErr');
+  err.classList.add('hidden');
+  if (!code) { showErr(err,'Masukkan kode akses terlebih dahulu'); return; }
+  // Simpan kode di localStorage sementara untuk dipakai setelah redirect OAuth
+  localStorage.setItem('pending_code', code);
+  await googleLogin();
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null;
+  updateNav(); goHome();
+  showToast('Berhasil logout');
+}
+
+function updateNav() {
+  const nr = document.getElementById('navRight');
+  if (!currentUser) {
+    nr.innerHTML = `<button class="nav-pill" onclick="showModal('loginModal')">Login</button><button class="nav-pill primary" onclick="showModal('registerModal')">Daftar</button>`;
+  } else if (currentProfile?.role === 'admin') {
+    nr.innerHTML = `<div class="member-indicator">&#9670; Admin</div><button class="nav-pill" onclick="logout()">Logout</button>`;
+  } else {
+    nr.innerHTML = `<div class="member-indicator">&#9670; Member</div><button class="nav-pill" onclick="logout()">Logout</button>`;
+  }
+}
+
+// ══════════════════════════════════════════
+// LOAD DATA
+// ══════════════════════════════════════════
+
+async function loadCategories() {
+  try {
+    const { data } = await Promise.race([
+      sb.from('categories').select('*').order('sort_order', { ascending: true }),
+      new Promise((_,r) => setTimeout(()=>r(new Error('timeout')), 5000))
+    ]);
+    allCategories = data || [];
+  } catch(e) {
+    allCategories = [];
+  }
+  renderCatBar();
+  refreshCatSelects();
+}
+
+async function loadAndRenderCards() {
+  // Show skeletons
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = Array(6).fill(0).map(()=>`
+    <div class="skel-card">
+      <div class="skel-thumb skeleton"></div>
+      <div class="skel-body">
+        <div class="skel-line skeleton"></div>
+        <div class="skel-line short skeleton"></div>
+        <div class="skel-line xs skeleton"></div>
+      </div>
+    </div>`).join('');
+
+  let data, error;
+  try {
+    const isMember = currentUser && currentProfile;
+    const cols = isMember
+      ? '*, categories(label)'
+      : 'id, title, description, category_id, image_url, badge, member_only, sort_order, created_at, categories(label)';
+    const result = await Promise.race([
+      sb.from('prompts').select(cols),
+      new Promise((_,r) => setTimeout(()=>r(new Error('timeout')), 8000))
+    ]);
+    data = result.data;
+    error = result.error;
+  } catch(e) {
+    data = null;
+    error = e;
+  }
+  allPrompts = (data || []).map(p => {
+    // Kalau bukan member, sembunyikan prompt_text di frontend
+    const isMember = currentUser && currentProfile;
+    if (!isMember && p.member_only) {
+      return { ...p, prompt_text: null };
+    }
+    return p;
+  });
+  document.getElementById('statTotal').textContent = allPrompts.length;
+  if (!data) {
+    document.getElementById('cardGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3);font-family:var(--mono);font-size:12px;line-height:2">⚠️ Gagal terhubung ke database.<br/>Pastikan SQL schema sudah dijalankan di Supabase.</div>`;
+    return;
+  }
+  renderCards();
+}
+
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+
+function renderCatBar() {
+  const bar = document.getElementById('catBar');
+  bar.innerHTML = `<button class="cat-btn${activeCat==='all'?' active':''}" onclick="setCat('all',this)">All</button>`
+    + allCategories.map(c=>`<button class="cat-btn${activeCat===c.id?' active':''}" onclick="setCat('${c.id}',this)">${c.label}</button>`).join('');
+  document.getElementById('statCatCount').textContent = allCategories.length;
+}
+
+function refreshCatSelects() {
+  const opts = allCategories.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  ['aCat','editCat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
+}
+
+function renderCards() {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const filtered = allPrompts.filter(p=>{
+    const mc = activeCat==='all' || p.category_id===activeCat;
+    const mq = !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+    return mc && mq;
+  });
+  document.getElementById('countLabel').textContent = filtered.length+' prompt';
+  const isMember = currentUser && currentProfile;
+  const grid = document.getElementById('cardGrid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3);font-family:var(--mono);font-size:12px">Tidak ada prompt ditemukan</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(p=>{
+    const locked = p.member_only && !isMember;
+    const catLabel = p.categories?.label || p.category_id || '';
+    return `<div class="card" onclick="openDetail(${p.id})">
+      <div class="card-thumb">
+        <img src="${p.image_url||''}" alt="${p.title}" loading="lazy" onerror="this.style.opacity=0"/>
+        <div class="card-thumb-overlay"></div>
+        ${p.badge==='viral'?'<div class="badge viral">VIRAL</div>':p.badge==='new'?'<div class="badge new">NEW</div>':''}
+      </div>
+      <div class="card-body">
+        <div class="card-title">${p.title}</div>
+        <div class="card-desc">${p.description}</div>
+        <div class="card-foot">
+          <span class="cat-tag">${catLabel}</span>
+          ${locked?`<span class="lock-chip">&#128274; Member</span>`:`<button class="copy-btn" onclick="event.stopPropagation();openDetail(${p.id})">Lihat prompt</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setCat(cat, el) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const found = allCategories.find(c=>c.id===cat);
+  document.getElementById('sectionTitle').textContent = cat==='all'?'All Prompts':(found?.label||cat);
+  renderCards();
+}
+
+function openDetail(id) {
+  const p = allPrompts.find(x=>x.id===id); if(!p) return;
+  const isMember = currentUser && currentProfile;
+  const locked = p.member_only && !isMember;
+  document.getElementById('detailImg').src = p.image_url||'';
+  document.getElementById('detailTitle').textContent = p.title;
+  document.getElementById('detailDesc').textContent = p.description;
+  document.getElementById('detailCat').textContent = p.categories?.label||p.category_id||'';
+  document.getElementById('detailBadgeEl').innerHTML = p.badge==='viral'?`<span class="badge viral" style="position:static">VIRAL</span>`:p.badge==='new'?`<span class="badge new" style="position:static">NEW</span>`:'';
+  document.getElementById('detailPromptText').textContent = p.prompt_text || '— prompt tersedia untuk member —';
+  detailPromptData = p.prompt_text || '';
+  document.getElementById('blurOverlay').classList.toggle('hidden', !locked);
+  document.getElementById('detailCopyBtn').classList.toggle('hidden', locked);
+  showModal('detailModal');
+}
+
+function copyDetail() {
+  navigator.clipboard.writeText(detailPromptData).catch(()=>{});
+  const btn = document.getElementById('detailCopyBtn');
+  btn.textContent = 'Copied! ✓';
+  setTimeout(()=>btn.textContent='Copy Prompt', 2000);
+  showToast('Prompt berhasil dicopy!','success');
+}
+
+// ══════════════════════════════════════════
+// ADMIN PANEL
+// ══════════════════════════════════════════
+
+function showAdmin() {
+  document.getElementById('mainContent').classList.add('hidden');
+  document.getElementById('adminPanel').classList.remove('hidden');
+  renderAdminTable(); renderCodesTable(); renderMembersTable(); renderCatsTable();
+}
+
+function goHome() {
+  document.getElementById('mainContent').classList.remove('hidden');
+  document.getElementById('adminPanel').classList.add('hidden');
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  ['tabAdd','tabList','tabCodes','tabCats','tabMembers'].forEach(t=>document.getElementById(t).classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+  if (tab==='tabList') renderAdminTable();
+  if (tab==='tabCodes') renderCodesTable();
+  if (tab==='tabCats') renderCatsTable();
+  if (tab==='tabMembers') renderMembersTable();
+}
+
+// ── PROMPTS CRUD ──
+
+async function addPrompt() {
+  const title      = document.getElementById('aTitle').value.trim();
+  const cat        = document.getElementById('aCat').value;
+  const desc       = document.getElementById('aDesc').value.trim();
+  const prompt_text= document.getElementById('aPrompt').value.trim();
+  const image_url  = document.getElementById('aImg').value.trim();
+  const badge      = document.getElementById('aBadge').value;
+  const member_only= document.getElementById('aMember').value==='1';
+  if (!title||!desc||!prompt_text) { showToast('Isi field yang wajib!','error'); return; }
+  setLoading('aSaveBtn',true,'Simpan Prompt');
+  const { error } = await sb.from('prompts').insert({
+    title, description:desc, prompt_text, category_id:cat,
+    image_url:image_url||null, badge:badge||'', member_only
+  });
+  setLoading('aSaveBtn',false,'Simpan Prompt');
+  if (error) { showToast('Gagal: '+error.message,'error'); return; }
+  ['aTitle','aDesc','aPrompt','aImg'].forEach(id=>document.getElementById(id).value='');
+  showToast('Prompt berhasil ditambahkan!','success');
+  await loadAndRenderCards();
+}
+
+async function renderAdminTable() {
+  const { data } = await sb.from('prompts').select('*,categories(label)').order('created_at',{ascending:false});
+  const rows = (data||[]).map(p=>`
+    <tr>
+      <td><img class="thumb-mini" src="${p.image_url||''}" onerror="this.style.opacity=0"/></td>
+      <td style="font-weight:500;font-size:12px;max-width:140px">${p.title}</td>
+      <td><span class="cat-tag">${p.categories?.label||p.category_id||''}</span></td>
+      <td>${p.badge?`<span class="badge ${p.badge}" style="position:static;font-size:9px">${p.badge.toUpperCase()}</span>`:'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${p.member_only?'var(--yellow)':'var(--text3)'}">${p.member_only?'Member':'Gratis'}</td>
+      <td style="white-space:nowrap">
+        <button class="act-btn edit" onclick="openEdit(${p.id})">Edit</button>
+        <button class="act-btn del" onclick="delPrompt(${p.id})">Hapus</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('adminTableBody').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Belum ada prompt</td></tr>';
+}
+
+async function delPrompt(id) {
+  if (!confirm('Hapus prompt ini?')) return;
+  const { error } = await sb.from('prompts').delete().eq('id',id);
+  if (error) { showToast('Gagal hapus: '+error.message,'error'); return; }
+  showToast('Prompt dihapus','error');
+  await loadAndRenderCards(); renderAdminTable();
+}
+
+async function openEdit(id) {
+  const { data:p } = await sb.from('prompts').select('*').eq('id',id).single();
+  if (!p) return;
+  document.getElementById('editId').value     = id;
+  document.getElementById('editTitle').value  = p.title;
+  document.getElementById('editDesc2').value  = p.description;
+  document.getElementById('editPrompt').value = p.prompt_text;
+  document.getElementById('editCat').value    = p.category_id;
+  document.getElementById('editBadge').value  = p.badge||'';
+  document.getElementById('editMember').value = p.member_only?'true':'false';
+  showModal('editModal');
+}
+
+async function saveEdit() {
+  const id = parseInt(document.getElementById('editId').value);
+  setLoading('editSaveBtn',true,'Simpan Perubahan');
+  const { error } = await sb.from('prompts').update({
+    title:       document.getElementById('editTitle').value.trim(),
+    description: document.getElementById('editDesc2').value.trim(),
+    prompt_text: document.getElementById('editPrompt').value.trim(),
+    category_id: document.getElementById('editCat').value,
+    badge:       document.getElementById('editBadge').value,
+    member_only: document.getElementById('editMember').value==='true',
+    updated_at:  new Date().toISOString()
+  }).eq('id',id);
+  setLoading('editSaveBtn',false,'Simpan Perubahan');
+  if (error) { showToast('Gagal: '+error.message,'error'); return; }
+  closeModal('editModal');
+  showToast('Prompt diperbarui!','success');
+  await loadAndRenderCards(); renderAdminTable();
+}
+
+// ── KODE AKSES ──
+
+async function generateCodes() {
+  const qty  = Math.min(50, Math.max(1, parseInt(document.getElementById('genQty').value)||1));
+  const days = parseInt(document.getElementById('expireDays').value);
+  const { data, error } = await sb.rpc('generate_access_codes', { p_qty:qty, p_days:days });
+  if (error) { showToast('Gagal generate kode: '+error.message,'error'); return; }
+  lastGenCodes = data || [];
+  const prev = document.getElementById('genPreview');
+  prev.classList.remove('hidden');
+  document.getElementById('genPreviewList').innerHTML = lastGenCodes.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:0.5px solid rgba(74,222,128,.2);border-radius:8px;padding:8px 12px">
+      <span class="code-val">${c}</span>
+      <button class="act-btn edit" onclick="copyCode('${c}')">Copy</button>
+    </div>`).join('');
+  showToast(qty+' kode berhasil dibuat!','success');
+  await renderCodesTable();
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).catch(()=>{});
+  showToast('Kode '+code+' dicopy!','success');
+}
+
+function copyAllCodes() {
+  navigator.clipboard.writeText(lastGenCodes.join('\n')).catch(()=>{});
+  showToast('Semua kode dicopy!','success');
+}
+
+async function renderCodesTable() {
+  const { data } = await sb.from('access_codes').select('*').order('created_at',{ascending:false});
+  const now = new Date();
+  document.getElementById('codesTableBody').innerHTML = (data||[]).map(c=>{
+    let st = c.status;
+    if (st==='active' && c.expire_date && new Date(c.expire_date)<now) st='expired';
+    const stLabel = {active:'Aktif',used:'Terpakai',expired:'Expired'}[st];
+    const expStr = c.expire_date ? fmtDate(c.expire_date) : 'Selamanya';
+    return `<tr>
+      <td><span class="code-val">${c.code}</span></td>
+      <td><span class="code-badge ${st}">${stLabel}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${c.used_by||'—'}<br/><span style="color:var(--text3);font-size:10px">${c.used_email||''}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${expStr}</td>
+      <td style="white-space:nowrap">
+        ${st==='active'?`<button class="act-btn edit" onclick="copyCode('${c.code}')">Copy</button>`:''}
+        <button class="act-btn del" onclick="deleteCode(${c.id})">Hapus</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Belum ada kode</td></tr>';
+}
+
+async function deleteCode(id) {
+  if (!confirm('Hapus kode ini?')) return;
+  await sb.from('access_codes').delete().eq('id',id);
+  showToast('Kode dihapus','error');
+  renderCodesTable();
+}
+
+// ── KATEGORI ──
+
+async function addCategory() {
+  const raw = document.getElementById('newCatName').value.trim();
+  if (!raw) { showToast('Isi nama kategori!','error'); return; }
+  const id = raw.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const sort_order = allCategories.length + 1;
+  const { error } = await sb.from('categories').insert({ id, label:raw, sort_order });
+  if (error) { showToast('Gagal: '+error.message,'error'); return; }
+  document.getElementById('newCatName').value = '';
+  showToast('Kategori "'+raw+'" ditambahkan!','success');
+  await loadCategories(); renderCatsTable();
+}
+
+async function renderCatsTable() {
+  const { data:cats } = await sb.from('categories').select('*').order('sort_order');
+  const { data:counts } = await sb.from('prompts').select('category_id');
+  const countMap = {};
+  (counts||[]).forEach(p=>{ countMap[p.category_id] = (countMap[p.category_id]||0)+1; });
+  document.getElementById('catsTableBody').innerHTML = (cats||[]).map(c=>{
+    const cnt = countMap[c.id]||0;
+    return `<tr>
+      <td style="font-weight:500">${c.label}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${c.id}</td>
+      <td style="font-family:var(--mono);font-size:12px;color:${cnt>0?'var(--accent)':'var(--text3)'}">${cnt} prompt</td>
+      <td style="white-space:nowrap">
+        <button class="act-btn edit" onclick="renameCat('${c.id}','${c.label}')">Rename</button>
+        <button class="act-btn del" onclick="deleteCat('${c.id}',${cnt})">Hapus</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function renameCat(id, oldLabel) {
+  const newLabel = prompt('Ganti nama "'+oldLabel+'" menjadi:', oldLabel);
+  if (!newLabel || newLabel.trim()===oldLabel) return;
+  const { error } = await sb.from('categories').update({ label:newLabel.trim() }).eq('id',id);
+  if (error) { showToast('Gagal rename: '+error.message,'error'); return; }
+  showToast('Nama diperbarui!','success');
+  await loadCategories(); renderCatsTable();
+}
+
+async function deleteCat(id, cnt) {
+  if (cnt>0) { showToast('Hapus atau pindahkan '+cnt+' prompt dulu!','error'); return; }
+  if (!confirm('Hapus kategori ini?')) return;
+  await sb.from('categories').delete().eq('id',id);
+  showToast('Kategori dihapus','error');
+  if (activeCat===id) activeCat='all';
+  await loadCategories(); renderCatsTable(); renderCards();
+}
+
+// ── MEMBERS ──
+
+async function renderMembersTable() {
+  const { data } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  document.getElementById('memberTableBody').innerHTML = (data||[]).map(m=>`
+    <tr>
+      <td style="font-weight:500">${m.name||'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${m.id}</td>
+      <td><span class="code-val" style="font-size:11px">${m.code_used||'—'}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${fmtDate(m.created_at)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Belum ada member</td></tr>';
+}
+
+// ══════════════════════════════════════════
+// HERO CANVAS ANIMATION
+// ══════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes, edges, particles;
+  const ACCENT = 'rgba(167,139,250,';
+  function resize() {
+    W = canvas.width  = canvas.parentElement.offsetWidth;
+    H = canvas.height = canvas.parentElement.offsetHeight;
+    init();
+  }
+  function init() {
+    nodes = [];
+    const cols = Math.ceil(W/80), rows = Math.ceil(H/70);
+    for (let r=0;r<=rows;r++) for (let c=0;c<=cols;c++) {
+      nodes.push({ x:c*(W/cols)+(Math.random()-.5)*28, y:r*(H/rows)+(Math.random()-.5)*20, r:Math.random()*1.2+.4, pulse:Math.random()*Math.PI*2, speed:.012+Math.random()*.018 });
+    }
+    edges = [];
+    for (let i=0;i<nodes.length;i++) for (let j=i+1;j<nodes.length;j++) {
+      const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+      if (Math.sqrt(dx*dx+dy*dy)<120) edges.push([i,j]);
+    }
+    particles = [];
+    const count = Math.min(18, Math.floor(edges.length*.18));
+    for (let i=0;i<count;i++) spawnParticle();
+  }
+  function spawnParticle() {
+    particles.push({ ei:Math.floor(Math.random()*edges.length), t:0, speed:.004+Math.random()*.006, dir:Math.random()>.5?1:-1 });
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    edges.forEach(([a,b])=>{
+      const na=nodes[a],nb=nodes[b];
+      const dist=Math.sqrt((nb.x-na.x)**2+(nb.y-na.y)**2);
+      ctx.beginPath(); ctx.moveTo(na.x,na.y); ctx.lineTo(nb.x,nb.y);
+      ctx.strokeStyle=ACCENT+(1-dist/120)*.18+')'; ctx.lineWidth=.5; ctx.stroke();
+    });
+    nodes.forEach(n=>{
+      n.pulse+=n.speed;
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle=ACCENT+(.15+.12*Math.sin(n.pulse))+')'; ctx.fill();
+    });
+    particles.forEach((p,i)=>{
+      const [a,b]=edges[p.ei]; const na=nodes[a],nb=nodes[b];
+      p.t+=p.speed*p.dir;
+      if (p.t>1||p.t<0) { particles[i]=null; spawnParticle(); return; }
+      const x=na.x+(nb.x-na.x)*p.t, y=na.y+(nb.y-na.y)*p.t;
+      const g=ctx.createRadialGradient(x,y,0,x,y,5);
+      g.addColorStop(0,ACCENT+'.9)'); g.addColorStop(1,ACCENT+'0)');
+      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    });
+    particles=particles.filter(Boolean);
+    requestAnimationFrame(draw);
+  }
+  const chipTexts=['model: midjourney','style: cinematic','seed: 4829','cfg: 7.5','steps: 28','sampler: dpm++','fantasy · viral','ar 1:1','prompt injected','v6.1 alpha','gpu: ready','inference: 3.2s'];
+  function spawnChip() {
+    const chip=document.createElement('div'); chip.className='chip';
+    chip.textContent=chipTexts[Math.floor(Math.random()*chipTexts.length)];
+    chip.style.left=(8+Math.random()*82)+'%'; chip.style.top=(10+Math.random()*75)+'%';
+    const dur=5+Math.random()*7;
+    chip.style.animationDuration=dur+'s'; chip.style.animationDelay=(Math.random()*3)+'s';
+    document.getElementById('heroChips').appendChild(chip);
+    setTimeout(()=>chip.remove(),(dur+3)*1000);
+  }
+  window.addEventListener('resize',resize); resize(); requestAnimationFrame(draw);
+  spawnChip(); spawnChip(); spawnChip(); setInterval(spawnChip,2200);
+})();
+
+// ══════════════════════════════════════════
+// INIT — cek session & load data
+// ══════════════════════════════════════════
+(async function init() {
+  // Sembunyikan loader LANGSUNG — tidak nunggu Supabase sama sekali
+  // loader sudah dihapus
+
+  // Cek session & load data paralel
+  const { data:{ session } } = await sb.auth.getSession();
+
+  if (session?.user) {
+    currentUser = session.user;
+    await loadProfile();
+    updateNav();
+    if (currentProfile?.role === 'admin') {
+      await loadCategories();
+      showAdmin();
+      return;
+    }
+  }
+
+  // Load kategori & prompt secara paralel untuk kecepatan
+  await Promise.all([loadCategories(), loadAndRenderCards()]);
+
+  // Handle pending Google register code
+  const pendingCode = localStorage.getItem('pending_code');
+  if (pendingCode && session?.user) {
+    localStorage.removeItem('pending_code');
+    const { data:profile } = await sb.from('profiles').select('code_used').eq('id',session.user.id).single();
+    if (!profile?.code_used) {
+      await sb.rpc('use_access_code', {
+        p_code: pendingCode, p_user_id: session.user.id,
+        p_name: session.user.user_metadata?.full_name||'Member',
+        p_email: session.user.email
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
