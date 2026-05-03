@@ -628,14 +628,6 @@ async function doForgot() {
   ok.classList.remove('hidden');
   document.getElementById('forgotEmail').value = '';
 }
-  const code = document.getElementById('regCode').value.trim().toUpperCase();
-  const err  = document.getElementById('regErr');
-  err.classList.add('hidden');
-  if (!code) { showErr(err,'Masukkan kode akses terlebih dahulu'); return; }
-  // Simpan kode di localStorage sementara untuk dipakai setelah redirect OAuth
-  localStorage.setItem('pending_code', code);
-  await googleLogin();
-}
 
 async function logout() {
   await sb.auth.signOut();
