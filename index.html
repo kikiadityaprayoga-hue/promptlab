@@ -495,8 +495,32 @@ document.addEventListener('keydown', e => {
 // AUTH
 // ══════════════════════════════════════════
 
-// Handle token refresh & sign out saja
+// Handle auth state changes
 sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    // Handle Google OAuth redirect
+    currentUser = session.user;
+    await loadProfile();
+    updateNav();
+    if (currentProfile?.role === 'admin') {
+      await loadCategories();
+      showAdmin();
+    } else {
+      await loadAndRenderCards();
+    }
+    // Handle pending Google register code
+    const pendingCode = localStorage.getItem('pending_code');
+    if (pendingCode) {
+      localStorage.removeItem('pending_code');
+      if (!currentProfile?.code_used) {
+        await sb.rpc('use_access_code', {
+          p_code: pendingCode, p_user_id: session.user.id,
+          p_name: session.user.user_metadata?.full_name||'Member',
+          p_email: session.user.email
+        });
+      }
+    }
+  }
   if (event === 'SIGNED_OUT') {
     currentUser = null; currentProfile = null;
     updateNav(); goHome(); await loadAndRenderCards();
@@ -522,11 +546,23 @@ async function doLogin() {
   err.classList.add('hidden');
   if (!email || !pass) { showErr(err,'Isi semua field'); return; }
   setLoading('loginBtn', true, 'Masuk');
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   setLoading('loginBtn', false, 'Masuk');
   if (error) { showErr(err, error.message === 'Invalid login credentials' ? 'Email atau password salah' : error.message); return; }
+  
+  // Load profile dan langsung redirect
+  currentUser = data.user;
+  await loadProfile();
+  updateNav();
   closeModal('loginModal');
   showToast('Selamat datang kembali!', 'success');
+  
+  if (currentProfile?.role === 'admin') {
+    await loadCategories();
+    showAdmin();
+  } else {
+    await loadAndRenderCards();
+  }
 }
 
 async function doRegister() {
