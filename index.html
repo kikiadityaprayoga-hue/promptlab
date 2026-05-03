@@ -148,7 +148,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .admin-tabs{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
 .tab-btn{font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
 .tab-btn.active{background:var(--accent-dim);border-color:rgba(167,139,250,.35);color:var(--accent);}
-.admin-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+.admin-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;min-height:0;}
 .admin-box h3{font-size:13px;font-weight:500;margin-bottom:20px;font-family:var(--mono);color:var(--accent);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .tbl{width:100%;border-collapse:collapse;}
@@ -291,10 +291,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
     <!-- TAB: KELOLA PROMPT -->
     <div id="tabList" class="hidden">
-      <div class="admin-box" style="padding:0;overflow:hidden">
+      <div class="admin-box" style="padding:0;overflow:hidden;min-height:0">
         <table class="tbl">
           <thead><tr><th>IMG</th><th>JUDUL</th><th>KATEGORI</th><th>BADGE</th><th>MEMBER</th><th>AKSI</th></tr></thead>
-          <tbody id="adminTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">Memuat...</td></tr></tbody>
+          <tbody id="adminTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-family:var(--mono);font-size:11px">⟳ Memuat data...</td></tr></tbody>
         </table>
       </div>
     </div>
