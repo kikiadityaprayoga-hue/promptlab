@@ -123,7 +123,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .skeleton{background:linear-gradient(90deg,var(--bg3) 25%,rgba(167,139,250,.05) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
-/* Load more */
+/* Sort bar */
+.sort-bar{display:flex;gap:4px;flex-wrap:wrap;}
+.sort-btn{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.sort-btn:hover{border-color:var(--border2);color:var(--text);}
+.sort-btn.active{background:var(--accent-dim);border-color:rgba(167,139,250,.35);color:var(--accent);}
 .load-more-wrap{display:flex;justify-content:center;padding:8px 0 40px;}
 .load-more-btn{font-family:var(--mono);font-size:12px;padding:12px 32px;border-radius:20px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
 .load-more-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
@@ -278,7 +282,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
   <div class="section-hd">
     <span id="sectionTitle">All Prompts</span>
-    <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="countLabel"></span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="sort-bar" id="sortBar">
+        <button class="sort-btn active" onclick="setSort('all',this)">Semua</button>
+        <button class="sort-btn" onclick="setSort('viral',this)">🔥 Viral</button>
+        <button class="sort-btn" onclick="setSort('new',this)">✨ New</button>
+        <button class="sort-btn" onclick="setSort('',this)">Standard</button>
+      </div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="countLabel"></span>
+    </div>
   </div>
   <div class="grid" id="cardGrid"></div>
   <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
@@ -776,9 +788,17 @@ function refreshCatSelects() {
   ['aCat','editCat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
 }
 
-const PAGE_SIZE = 20; // 4 kolom x 5 baris
+const PAGE_SIZE = 20;
 let currentPage = 1;
 let filteredCache = [];
+let activeSort = 'all';
+
+function setSort(sort, el) {
+  activeSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderCards();
+}
 
 function renderCards() {
   currentPage = 1;
@@ -786,7 +806,8 @@ function renderCards() {
   filteredCache = allPrompts.filter(p=>{
     const mc = activeCat==='all' || p.category_id===activeCat;
     const mq = !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
-    return mc && mq;
+    const ms = activeSort==='all' || p.badge===activeSort;
+    return mc && mq && ms;
   });
   document.getElementById('countLabel').textContent = filteredCache.length+' prompt';
   const isMember = currentUser && currentProfile;
