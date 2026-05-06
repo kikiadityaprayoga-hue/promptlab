@@ -98,10 +98,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .section-hd span{font-family:var(--mono);font-size:11px;color:var(--text2);}
 
 /* GRID & CARDS */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:0 28px 40px;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:0 28px 40px;}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:768px){.grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 32px;}}
+@media(max-width:480px){.grid{grid-template-columns:repeat(2,1fr);gap:8px;padding:0 12px 24px;}}
 .card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;}
 .card:hover{border-color:rgba(167,139,250,.25);transform:translateY(-2px);}
-.card-thumb{width:100%;aspect-ratio:1/1;position:relative;overflow:hidden;background:var(--bg3);}
+.card-thumb{width:100%;aspect-ratio:4/5;position:relative;overflow:hidden;background:var(--bg3);}
 .card-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .card-thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%);}
 .badge{position:absolute;top:8px;left:8px;font-family:var(--mono);font-size:9px;font-weight:500;padding:3px 8px;border-radius:20px;}
@@ -117,11 +120,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 .copy-btn:hover{background:rgba(167,139,250,.2);}
 .member-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;background:rgba(251,191,36,.1);border:0.5px solid rgba(251,191,36,.25);border-radius:6px;color:var(--yellow);cursor:pointer;}
 
-/* SKELETON */
-.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,rgba(167,139,250,.05) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
 @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* Load more */
+.load-more-wrap{display:flex;justify-content:center;padding:8px 0 40px;}
+.load-more-btn{font-family:var(--mono);font-size:12px;padding:12px 32px;border-radius:20px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;}
+.load-more-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.load-more-btn.loading{opacity:.6;pointer-events:none;}
+.load-more-btn .spinner{width:14px;height:14px;border:2px solid rgba(167,139,250,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Skeleton */
 .skel-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.skel-thumb{width:100%;aspect-ratio:1/1;}
+.skel-thumb{width:100%;aspect-ratio:4/5;}
 .skel-body{padding:10px 12px 12px;}
 .skel-line{height:12px;border-radius:4px;margin-bottom:8px;}
 .skel-line.short{width:60%;}
@@ -161,7 +173,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
 /* DETAIL MODAL */
 .prompt-modal{max-width:520px;}
-.big-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:16px;background:var(--bg3);}
+.big-thumb{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:16px;background:var(--bg3);max-height:420px;}
 .prompt-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);margin:12px 0;position:relative;min-height:80px;}
 .blur-overlay{position:absolute;inset:0;border-radius:var(--radius-sm);backdrop-filter:blur(5px);background:rgba(10,10,15,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
 .blur-overlay span{font-family:var(--mono);font-size:11px;color:var(--text2);}
@@ -269,6 +281,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
     <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="countLabel"></span>
   </div>
   <div class="grid" id="cardGrid"></div>
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">
+      <span>Muat lebih banyak</span>
+    </button>
+  </div>
 </div>
 
 <!-- ADMIN PANEL -->
@@ -759,45 +776,115 @@ function refreshCatSelects() {
   ['aCat','editCat'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=opts; });
 }
 
+const PAGE_SIZE = 20; // 4 kolom x 5 baris
+let currentPage = 1;
+let filteredCache = [];
+
 function renderCards() {
+  currentPage = 1;
   const q = (document.getElementById('searchInput').value||'').toLowerCase();
-  const filtered = allPrompts.filter(p=>{
+  filteredCache = allPrompts.filter(p=>{
     const mc = activeCat==='all' || p.category_id===activeCat;
     const mq = !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
     return mc && mq;
   });
-  document.getElementById('countLabel').textContent = filtered.length+' prompt';
+  document.getElementById('countLabel').textContent = filteredCache.length+' prompt';
   const isMember = currentUser && currentProfile;
   const grid = document.getElementById('cardGrid');
-  if (!filtered.length) {
+
+  if (!filteredCache.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text3);font-family:var(--mono);font-size:12px">Tidak ada prompt ditemukan</div>`;
+    document.getElementById('loadMoreWrap').style.display = 'none';
     return;
   }
-  grid.innerHTML = filtered.map(p=>{
-    const locked = p.member_only && !isMember;
-    const catLabel = p.categories?.label || p.category_id || '';
-    const pipHtml = p.image_before_url ? `
-      <div class="pip-before">
-        <img src="${p.image_before_url}" alt="before" loading="lazy" onerror="this.parentElement.style.display='none'"/>
-        <div class="pip-label">Before</div>
-      </div>` : '';
-    return `<div class="card" onclick="openDetail(${p.id})">
-      <div class="card-thumb">
-        <img src="${p.image_url||''}" alt="${p.title}" loading="lazy" onerror="this.style.opacity=0"/>
-        <div class="card-thumb-overlay"></div>
-        ${p.badge==='viral'?'<div class="badge viral">VIRAL</div>':p.badge==='new'?'<div class="badge new">NEW</div>':''}
-        ${pipHtml}
+
+  const pageItems = filteredCache.slice(0, PAGE_SIZE);
+  grid.innerHTML = pageItems.map(p => cardHTML(p, isMember)).join('');
+
+  const wrap = document.getElementById('loadMoreWrap');
+  if (filteredCache.length > PAGE_SIZE) {
+    wrap.style.display = 'flex';
+    document.getElementById('loadMoreBtn').innerHTML = '<span>Muat lebih banyak</span>';
+    document.getElementById('loadMoreBtn').classList.remove('loading');
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+async function loadMore() {
+  currentPage++;
+  const btn = document.getElementById('loadMoreBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<div class="spinner"></div><span>Memuat...</span>';
+
+  // Simulasi loading effect
+  await new Promise(r => setTimeout(r, 600));
+
+  const isMember = currentUser && currentProfile;
+  const start = (currentPage-1) * PAGE_SIZE;
+  const end = currentPage * PAGE_SIZE;
+  const newItems = filteredCache.slice(start, end);
+
+  const grid = document.getElementById('cardGrid');
+  // Add skeleton dulu
+  const skels = Array(Math.min(newItems.length, PAGE_SIZE)).fill(0).map(()=>`
+    <div class="skel-card">
+      <div class="skel-thumb skeleton"></div>
+      <div class="skel-body">
+        <div class="skel-line skeleton"></div>
+        <div class="skel-line short skeleton"></div>
+        <div class="skel-line xs skeleton"></div>
       </div>
-      <div class="card-body">
-        <div class="card-title">${p.title}</div>
-        <div class="card-desc">${p.description}</div>
-        <div class="card-foot">
-          <span class="cat-tag">${catLabel}</span>
-          ${locked?`<span class="lock-chip">&#128274; Member</span>`:`<button class="copy-btn" onclick="event.stopPropagation();openDetail(${p.id})">Lihat prompt</button>`}
-        </div>
+    </div>`).join('');
+
+  const skelContainer = document.createElement('div');
+  skelContainer.style.display = 'contents';
+  skelContainer.innerHTML = skels;
+  grid.appendChild(skelContainer);
+
+  await new Promise(r => setTimeout(r, 400));
+  skelContainer.remove();
+
+  // Append real cards
+  newItems.forEach(p => {
+    const div = document.createElement('div');
+    div.innerHTML = cardHTML(p, isMember);
+    grid.appendChild(div.firstElementChild);
+  });
+
+  const wrap = document.getElementById('loadMoreWrap');
+  if (end >= filteredCache.length) {
+    wrap.style.display = 'none';
+  } else {
+    btn.classList.remove('loading');
+    btn.innerHTML = '<span>Muat lebih banyak</span>';
+  }
+}
+
+function cardHTML(p, isMember) {
+  const locked = p.member_only && !isMember;
+  const catLabel = p.categories?.label || p.category_id || '';
+  const pipHtml = p.image_before_url ? `
+    <div class="pip-before">
+      <img src="${p.image_before_url}" alt="before" loading="lazy" onerror="this.parentElement.style.display='none'"/>
+      <div class="pip-label">Before</div>
+    </div>` : '';
+  return `<div class="card" onclick="openDetail(${p.id})">
+    <div class="card-thumb">
+      <img src="${p.image_url||''}" alt="${p.title}" loading="lazy" onerror="this.style.opacity=0"/>
+      <div class="card-thumb-overlay"></div>
+      ${p.badge==='viral'?'<div class="badge viral">VIRAL</div>':p.badge==='new'?'<div class="badge new">NEW</div>':''}
+      ${pipHtml}
+    </div>
+    <div class="card-body">
+      <div class="card-title">${p.title}</div>
+      <div class="card-desc">${p.description}</div>
+      <div class="card-foot">
+        <span class="cat-tag">${catLabel}</span>
+        ${locked?`<span class="lock-chip">&#128274; Member</span>`:`<button class="copy-btn" onclick="event.stopPropagation();openDetail(${p.id})">Lihat prompt</button>`}
       </div>
-    </div>`;
-  }).join('');
+    </div>
+  </div>`;
 }
 
 function setCat(cat, el) {
